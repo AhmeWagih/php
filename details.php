@@ -1,15 +1,17 @@
 <?php
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+  header('Location: login.php');
+  exit();
+}
+
+require('connection.php');
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 if ($id <= 0) {
   header('Location: users.php');
   exit();
-}
-
-$database = new mysqli('localhost', 'root', 'Aa**2003//', 'PHPCourse');
-
-if ($database->connect_error) {
-  die('Connection failed: ' . $database->connect_error);
 }
 
 $stmt = $database->prepare(
@@ -73,18 +75,19 @@ foreach ($decodedSkills as $skill) {
   <main class="mx-auto flex min-h-screen max-w-xl items-start px-4 py-3 sm:px-6 sm:py-6">
     <section
       class="w-full rounded-[22px] bg-white/95 px-4 py-4 shadow-[0_16px_50px_rgba(99,102,241,0.12)] ring-1 ring-slate-100 sm:px-5 sm:py-5">
-      <header class="mb-6 text-center">
+      <header class="mb-6 text-center flex items-center justify-between">
         <h1 class="text-3xl font-semibold tracking-tight text-indigo-500 sm:text-[2rem]">User Details</h1>
+        <a href="logout.php" class="text-indigo-500 p-1 rounded border border-indigo-500 hover:text-indigo-700">Logout</a>
       </header>
 
       <div
         class="rounded-[20px] bg-gradient-to-b from-white to-slate-50 px-4 pb-5 pt-6 shadow-sm ring-1 ring-slate-100 sm:px-6">
         <div class="flex flex-col items-center text-center">
-          <div class="relative mb-4">
+          <!-- <div class="relative mb-4">
             <div class="absolute inset-0 rounded-full bg-indigo-300/25 blur-[2px]"></div>
             <img src="<?php echo ($profile_image); ?>" alt="Profile avatar"
               class="relative h-36 w-36 rounded-full border-4 border-white object-cover shadow-[0_10px_30px_rgba(99,102,241,0.18)]">
-          </div>
+          </div> -->
           <h2 class="text-[1.35rem] font-semibold tracking-tight text-slate-700 sm:text-2xl">
             <?php echo ($full_name); ?></h2>
         </div>
@@ -170,14 +173,6 @@ foreach ($decodedSkills as $skill) {
             </div>
           </section>
         </div>
-
-        <div class="my-8 border-t border-slate-200"></div>
-
-        <a href="index.php"
-          class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 px-5 py-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(79,70,229,0.28)] transition hover:brightness-105">
-          <span>&#9998;</span>
-          Edit Profile
-        </a>
       </div>
     </section>
   </main>

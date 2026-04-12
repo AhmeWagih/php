@@ -7,7 +7,6 @@ $fieldErrors = [
     'last_name' => [],
     'email' => [],
     'password' => [],
-    'image' => [],
 ];
 
 foreach ($errorList as $error) {
@@ -21,9 +20,7 @@ foreach ($errorList as $error) {
         $fieldErrors['email'][] = $error;
     } elseif (strpos($normalized, 'password') !== false) {
         $fieldErrors['password'][] = $error;
-    } elseif (strpos($normalized, 'image') !== false) {
-        $fieldErrors['image'][] = $error;
-    }
+    } 
 }
 ?>
 
@@ -112,7 +109,7 @@ foreach ($errorList as $error) {
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-slate-700">Email</label>
                         <input type="email" name="email"
-                            class="w-full rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm outline-none ring-0 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                            class="w-full rounded-lg border border-blue-100  px-3 py-2 text-sm outline-none ring-0 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                             placeholder="email@example.com">
                         <?php foreach ($fieldErrors['email'] as $message): ?>
                             <p class="mt-1 text-sm text-red-600"><?php echo ($message); ?></p>
@@ -122,9 +119,9 @@ foreach ($errorList as $error) {
                         <label class="mb-2 block text-sm font-semibold text-slate-700">Password</label>
                         <div class="flex overflow-hidden rounded-lg border border-blue-100 bg-blue-50">
                             <input id="pass" type="password" name="password"
-                                class="w-full bg-transparent px-3 py-2 text-sm outline-none" value="">
-                            <button
-                                class="inline-flex items-center border-l border-blue-100 px-3 text-slate-500">Show</button>
+                                class="w-full rounded-lg border border-blue-100  px-3 py-2 text-sm outline-none ring-0 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" value="">
+                            <!-- <button
+                                class="inline-flex items-center border-l border-blue-100 px-3 text-slate-500">Show</button> -->
                         </div>
                         <?php foreach ($fieldErrors['password'] as $message): ?>
                             <p class="mt-1 text-sm text-red-600"><?php echo ($message); ?></p>
@@ -149,7 +146,7 @@ foreach ($errorList as $error) {
                     </div>
                 </div>
 
-                <div class="mt-4">
+                <!-- <div class="mt-4">
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Verification</label>
                     <div class="flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 p-3">
                         <div
@@ -161,9 +158,9 @@ foreach ($errorList as $error) {
                             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-0 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 sm:max-w-[200px]"
                             placeholder="Enter captcha">
                     </div>
-                </div>
+                </div> -->
 
-                <div class="mt-4">
+                <!-- <div class="mt-4">
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Profile Image</label>
                     <div>
                         <input type="file" name="image"
@@ -173,7 +170,7 @@ foreach ($errorList as $error) {
                             <p class="mt-1 text-sm text-red-600"><?php echo ($message); ?></p>
                         <?php endforeach; ?>
                     </div>
-                </div>
+                </div> -->
 
                 <hr class="my-6 border-slate-200">
 

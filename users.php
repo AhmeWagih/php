@@ -1,12 +1,17 @@
 <?php
-
-$database = new mysqli('localhost', 'root', 'Aa**2003//', 'PHPCourse');
-
-if ($database->connect_error) {
-  die("Connection failed: " . $database->connect_error);
+session_start();
+if (!isset($_SESSION['user_id'])) {
+  header('Location: login.php');
+  exit();
 }
 
+require('connection.php');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $httpMethod = strtoupper(trim($_POST['_method'] ?? 'POST'));
+  $isUpdate = $httpMethod === 'PATCH';
+  $userId = (int) ($_POST['id'] ?? 0);
+
   $first_name = trim($_POST['first_name'] ?? '');
   $last_name = trim($_POST['last_name'] ?? '');
   $department = trim($_POST['department'] ?? '');
@@ -16,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $email = trim($_POST['email'] ?? '');
   $password = $_POST['password'] ?? '';
   $skills = $_POST['skills'] ?? [];
-  $file = $_FILES['image'] ?? null;
+  // $file = $_FILES['image'] ?? null;
 
   if (!is_array($skills)) {
     $skills = [$skills];
@@ -24,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   $full_name = trim($first_name . ' ' . $last_name);
   $errors = [];
-  $image_name = 'default.png';
+  // $image_name = 'default.png';
 
   if (empty($first_name)) {
     $errors[] = "First name is required.";
@@ -66,34 +71,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
   }
 
-  $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-  $image_name = time() . '_' . uniqid() . '.' . $ext;
-  $target_path = 'uploads/' . $image_name;
+  // $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+  // $image_name = time() . '_' . uniqid() . '.' . $ext;
+  // $target_path = 'uploads/' . $image_name;
 
-  if (!move_uploaded_file($file['tmp_name'], $target_path)) {
-    $errors[] = "Failed to upload image.";
-    $image_name = 'default.png';
-  }
+  // if (!move_uploaded_file($file['tmp_name'], $target_path)) {
+  //   $errors[] = "Failed to upload image.";
+  //   $image_name = 'default.png';
+  // }
 
   if (!empty($errors)) {
-    header("Location: index.php?errors=" . urlencode(implode(", ", $errors)));
+    $errorText = urlencode(implode(", ", $errors));
+    if ($isUpdate && $userId > 0) {
+      header("Location: edit.php?id={$userId}&errors={$errorText}");
+      exit();
+    }
+
+    header("Location: index.php?errors={$errorText}");
     exit();
   }
 
-  $skills = json_encode($_POST['skills'] ?? []);
+  $skillsJson = json_encode($skills);
+
+  if ($isUpdate) {
+    if ($userId <= 0) {
+      header("Location: users.php");
+      exit();
+    }
+
+    $stmt = $database->prepare(
+      "UPDATE users
+      SET first_name = ?, last_name = ?, email = ?, password = ?, country = ?, address = ?, gender = ?, department = ?, skills = ?
+      WHERE id = ?
+      LIMIT 1"
+    );
+    $stmt->bind_param(
+      'sssssssssi',
+      $first_name,
+      $last_name,
+      $email,
+      $password,
+      $country,
+      $address,
+      $gender,
+      $department,
+      $skillsJson,
+      $userId
+    );
+    $stmt->execute();
+
+    header("Location: users.php");
+    exit();
+  }
 
   $stmt = $database->prepare(
-    "INSERT INTO users (first_name, last_name, image, email, password, country, address, gender, department, skills)
-    VALUES ('$first_name',
-      '$last_name',
-      '$image_name',
-      '$email',
-      '$password',
-      '$country',
-      '$address',
-      '$gender',
-      '$department',
-      '$skills')"
+    "INSERT INTO users (first_name, last_name, email, password, country, address, gender, department, skills)
+    VALUES ( '$first_name',
+    '$last_name',
+    '$email',
+    '$password',
+    '$country',
+    '$address',
+    '$gender',
+    '$department',
+    '$skillsJson')"
   );
   $stmt->execute();
 
@@ -113,8 +154,6 @@ if ($result) {
   }
   $result->free();
 }
-
-
 
 ?>
 
@@ -142,7 +181,7 @@ if ($result) {
             <th class="px-6 py-3 text-left text-sm font-semibold">Gender</th>
             <th class="px-6 py-3 text-left text-sm font-semibold">Email</th>
             <th class="px-6 py-3 text-left text-sm font-semibold">Skills</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold">ِActions</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Actions</th>
 
           </tr>
         </thead>
@@ -166,10 +205,12 @@ if ($result) {
               <td class="px-6 py-4 text-sm text-nowrap text-gray-700"><?php echo ($user['email'] ?: '-'); ?></td>
               <td class="px-6 py-4 text-sm text-nowrap text-gray-700"><?php echo ($skillsText); ?></td>
               <td class="px-6 py-4 text-sm text-nowrap text-gray-700">
+                <a href="edit.php?id=<?php echo urlencode((string) ($user['id'] ?? '')); ?>"
+                  class="text-indigo-600 p-1 rounded border border-indigo-600 hover:bg-indigo-600 hover:text-white">Edit</a>
                 <a href="details.php?id=<?php echo urlencode((string) ($user['id'] ?? '')); ?>"
-                  class="text-indigo-600 hover:text-indigo-900">Show</a>
+                  class="text-indigo-600 p-1 rounded border border-indigo-600 hover:bg-indigo-600 hover:text-white">Show</a>
                 <a href="delete.php?id=<?php echo urlencode((string) ($user['id'] ?? '')); ?>"
-                  class="text-red-600 hover:text-red-900">Delete</a>
+                  class="text-red-600 border p-1 rounded border-red-600 hover:bg-red-600 hover:text-white">Delete</a>
               </td>
             </tr>
           <?php endforeach; ?>

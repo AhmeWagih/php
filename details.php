@@ -7,6 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require('connection.php');
+require('./classes/User.php');
 $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
 if ($id <= 0) {
@@ -14,17 +15,8 @@ if ($id <= 0) {
   exit();
 }
 
-$stmt = $database->prepare(
-  'SELECT first_name, last_name, department, country, gender, address, email, password, skills, image
-    FROM users
-    WHERE id = ?
-    LIMIT 1'
-);
-
-$stmt->bind_param('i', $id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result ? $result->fetch_assoc() : null;
+$userModel = new User($database);
+$user = $userModel->findById($id);
 
 if (!$user) {
   header('Location: users.php');

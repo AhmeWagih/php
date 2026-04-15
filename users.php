@@ -6,70 +6,30 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require('connection.php');
+require('./classes/User.php');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $httpMethod = strtoupper(trim($_POST['_method'] ?? 'POST'));
   $isUpdate = $httpMethod === 'PATCH';
   $userId = (int) ($_POST['id'] ?? 0);
 
-  $first_name = trim($_POST['first_name'] ?? '');
-  $last_name = trim($_POST['last_name'] ?? '');
-  $department = trim($_POST['department'] ?? '');
-  $country = trim($_POST['country'] ?? '');
-  $gender = trim($_POST['gender'] ?? '');
-  $address = trim($_POST['address'] ?? '');
-  $email = trim($_POST['email'] ?? '');
-  $password = $_POST['password'] ?? '';
   $skills = $_POST['skills'] ?? [];
-  // $file = $_FILES['image'] ?? null;
-
   if (!is_array($skills)) {
     $skills = [$skills];
   }
 
-  $full_name = trim($first_name . ' ' . $last_name);
-  $errors = [];
-  // $image_name = 'default.png';
+  $userModel = (new User($database))
+    ->setFirstName((string) ($_POST['first_name'] ?? ''))
+    ->setLastName((string) ($_POST['last_name'] ?? ''))
+    ->setDepartment((string) ($_POST['department'] ?? ''))
+    ->setCountry((string) ($_POST['country'] ?? ''))
+    ->setGender((string) ($_POST['gender'] ?? ''))
+    ->setAddress((string) ($_POST['address'] ?? ''))
+    ->setEmail((string) ($_POST['email'] ?? ''))
+    ->setPassword((string) ($_POST['password'] ?? ''))
+    ->setSkills($skills);
 
-  if (empty($first_name)) {
-    $errors[] = "First name is required.";
-  } elseif (strlen($first_name) < 3) {
-    $errors[] = "First Name Must be more than 3 letters";
-  }
-
-  if (empty($last_name)) {
-    $errors[] = "Last name is required.";
-  } elseif (strlen($last_name) < 3) {
-    $errors[] = "Last Name must be more than 3 letters.";
-  }
-
-  if (empty($email)) {
-    $errors[] = "Email is required.";
-  } else {
-    if (!preg_match('/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/', $email)) {
-      $errors[] = "Email is invalid (regex validation failed).";
-    }
-
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-      $errors[] = "Email is invalid (filter_var validation failed).";
-    }
-  }
-
-  if (empty($password)) {
-    $errors[] = "Password is required.";
-  } else {
-    if (strlen($password) !== 8) {
-      $errors[] = "Password must be exactly 8 characters.";
-    }
-
-    if (!preg_match('/^[A-Za-z0-9_]+$/', $password)) {
-      $errors[] = "Password: No special characters allowed. Only underscore (_) is permitted.";
-    }
-
-    if (preg_match('/[A-Z]/', $password)) {
-      $errors[] = "Password: No capital characters allowed.";
-    }
-  }
+  $errors = $userModel->validate(true);
 
   // $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
   // $image_name = time() . '_' . uniqid() . '.' . $ext;
@@ -91,69 +51,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
   }
 
-  $skillsJson = json_encode($skills);
-
   if ($isUpdate) {
     if ($userId <= 0) {
       header("Location: users.php");
       exit();
     }
 
-    $stmt = $database->prepare(
-      "UPDATE users
-      SET first_name = ?, last_name = ?, email = ?, password = ?, country = ?, address = ?, gender = ?, department = ?, skills = ?
-      WHERE id = ?
-      LIMIT 1"
-    );
-    $stmt->bind_param(
-      'sssssssssi',
-      $first_name,
-      $last_name,
-      $email,
-      $password,
-      $country,
-      $address,
-      $gender,
-      $department,
-      $skillsJson,
-      $userId
-    );
-    $stmt->execute();
+    $userModel->updateById($userId);
 
     header("Location: users.php");
     exit();
   }
 
-  $stmt = $database->prepare(
-    "INSERT INTO users (first_name, last_name, email, password, country, address, gender, department, skills)
-    VALUES ( '$first_name',
-    '$last_name',
-    '$email',
-    '$password',
-    '$country',
-    '$address',
-    '$gender',
-    '$department',
-    '$skillsJson')"
-  );
-  $stmt->execute();
+  $userModel->create();
 
   header("Location: users.php");
   exit();
 
 }
 
-$users = [];
-$result = $database->query(
-  "SELECT id, first_name, last_name, department, country, gender, email, skills FROM users ORDER BY id DESC"
-);
-
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $users[] = $row;
-  }
-  $result->free();
-}
+$users = (new User($database))->findAll();
 
 ?>
 

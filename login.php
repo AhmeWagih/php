@@ -1,6 +1,6 @@
 <?php
 require('connection.php');
-
+require('./classes/User.php');
 session_start();
 
 $statusMessage = '';
@@ -11,13 +11,10 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
   $password = $_POST['password'];
   $emailValue = $email;
 
-  $stmt = $database->prepare("SELECT *, password FROM users WHERE email = ? LIMIT 1");
-  $stmt->bind_param("s", $email);
-  $stmt->execute();
-  $result = $stmt->get_result();
+  $userModel = new User($database);
+  $user = $userModel->findByEmail($email);
 
-  if ($result->num_rows === 1) {
-    $user = $result->fetch_assoc();
+  if ($user !== null) {
     if ($user['password'] === $password) {
       $_SESSION['user_id'] = $user['id'];
       $_SESSION['namename'] = $user['first_name'] . ' ' . $user['last_name'];
@@ -29,8 +26,6 @@ if (isset($_POST['email']) && isset($_POST['password'])) {
   } else {
     $statusMessage = 'User not found.';
   }
-
-  $stmt->close();
 }
 ?>
 
